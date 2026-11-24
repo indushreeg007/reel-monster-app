@@ -1,17 +1,20 @@
+
 name: Build Reel Monster APK
 
 on:
   workflow_dispatch:
-  
+
 jobs:
   build:
+    name: Build Android APK
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out source
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -21,11 +24,39 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build debug APK
+      - name: Check Android project structure
+        run: |
+          echo "Checking Reel Monster project..."
+
+          test -f settings.gradle.kts || {
+            echo "ERROR: settings.gradle.kts missing"
+            exit 1
+          }
+
+          test -f build.gradle.kts || {
+            echo "ERROR: Root build.gradle.kts missing"
+            exit 1
+          }
+
+          test -f app/build.gradle.kts || {
+            echo "ERROR: app/build.gradle.kts missing"
+            exit 1
+          }
+
+          test -f app/src/main/AndroidManifest.xml || {
+            echo "ERROR: AndroidManifest.xml missing"
+            exit 1
+          }
+
+          echo "Project structure looks correct!"
+
+      - name: Build Reel Monster APK
         run: gradle --no-daemon :app:assembleDebug
 
-      - name: Upload APK
+      - name: Upload Reel Monster APK
         uses: actions/upload-artifact@v4
         with:
-          name: ReelMonster-debug-APK
+          name: ReelMonster-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
